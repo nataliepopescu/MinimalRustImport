@@ -52,8 +52,8 @@ dependencies {
 apply plugin: 'org.mozilla.rust-android-gradle.rust-android'
 
 cargo {
-    module = "../tank"
-    libname = "tank"
+    module = "../simple"
+    libname = "simple"
     targets = ["x86_64", "x86", "arm", "arm64"]
 }
 

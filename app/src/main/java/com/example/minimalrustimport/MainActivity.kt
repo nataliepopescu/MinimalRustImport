@@ -13,7 +13,7 @@ class MainActivity : AppCompatActivity() {
     // furthermore, this is the first change I've made to the code and it still compiles
     companion object {
         init {
-            System.loadLibrary("tank")
+            System.loadLibrary("simple")
         }
     }
 }
