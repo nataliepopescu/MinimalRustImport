@@ -105,8 +105,24 @@ out all related code is commented out. So, no need to compile this crate anyway!
 
 
 
-As of now, all dependencies compile. Next, let's test out SCUBA-specific code.
+# SCUBA libs
 
+As of now, all dependencies compile. Next, let's test out SCUBA-specific code.
+This will hopefully resolve two possible errors: (1) SCUBA code that may not compile
+on different architectures, and (2) dependency version conflicts across all of core/tank's
+dependencies. 
+
+I create two softlinks, `core` (pointing to the scuba core library) and `tank`
+(pointing to the tank library).
+
+Let's first test out `core` (replace "simple" with "core" in `app/build.gradle` and
+`/app/src/main/java/com/example/minimalrustimport/MainActivity.kt`).
+
+TODO: remove all warnings from core/tank. 
+
+Core works! Now let's try TANK. 
+
+TANK works too! Woohooo!
 
 
 
