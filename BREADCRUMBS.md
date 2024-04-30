@@ -1,20 +1,17 @@
+# SCUBA Android Breadcrumbs
+
+TODO when/how is `local.properties` generated? Contains $ANDROID_HOME value.
+Currently checked into git but values are specific to my machine, so need 
+instructions for generating it per machine. 
+
+
+
+
 If python is not found (but python3 is installed), I got the simple app to build by simply:
 
 ```sh
 sudo cp /usr/bin/python3 /usr/bin/python
 ```
-
-
-
-App compiles, but the emulator doesn't actually show the app. Launch apparently
-succeeds but logcat shows the following error: 
-
-`java.lang.UnsatisfiedLinkError: dlopen failed: library "libsimple.so" not found`.
-
-Looking this up I find [this](https://stackoverflow.com/questions/52076641/java-lang-unsatisfiedlinkerror-dlopen-failed-library-not-found)
-article. 
-
-TODO still need to fix this. 
 
 
 
@@ -26,7 +23,7 @@ export ANDROID_NDK="/home/np/Android/Sdk/ndk-bundle"
 
 
 
-# Debugging `reqwest` crate issues
+## Debugging `reqwest` crate issues
 
 ```sh
 error: failed to run custom build command for `openssl-sys v0.9.102`
@@ -80,7 +77,7 @@ So something about the RANLIB/TOOLCHAIN vars must have helped. (TARGET is hopefu
 
 
 
-# Debugging `rkyv_codec` crate issues
+## Debugging `rkyv_codec` crate issues
 
 ```sh
 error[E0308]: mismatched types
@@ -105,7 +102,7 @@ out all related code is commented out. So, no need to compile this crate anyway!
 
 
 
-# SCUBA libs
+## SCUBA libs
 
 As of now, all dependencies compile. Next, let's test out SCUBA-specific code.
 This will hopefully resolve two possible errors: (1) SCUBA code that may not compile
@@ -126,7 +123,38 @@ TANK works too! Woohooo!
 
 
 
+## Building in Android Studio
 
+The android studio build gets stuck at the ranlib errors above. I try editing
+the project `gradle.properties` file with the environment variables that 
+I set before (setting them in the Android Studio terminal tab did not work). 
+Setting these values in the global `gradle.properties` does not work, nor does 
+`gradle/wrapper/gradle-wrapper.properties`. 
+
+From [this](https://stackoverflow.com/questions/75943717/error-building-rust-project-for-android-flutter-arm-linux-androideabi-ranlib)
+link, setting the PATH vars in the AS terminal does not help. 
+
+However, modifying the cargo config file does seem to do something. Namely, adding
+at least environment variables $TOOLCHAIN and $RANLIB, as well as the linker
+value for `aarch64-linux-android` works (see tank's top-level `/.cargo/config.toml`).
+
+The app now *officially* builds _in_ Android Studio. 
+
+
+## Debugging emulator errors
+
+
+
+
+App compiles, but the emulator doesn't actually show the app. Launch apparently
+succeeds but logcat shows the following error: 
+
+`java.lang.UnsatisfiedLinkError: dlopen failed: library "libsimple.so" not found`.
+
+Looking this up I find [this](https://stackoverflow.com/questions/52076641/java-lang-unsatisfiedlinkerror-dlopen-failed-library-not-found)
+article. 
+
+TODO still need to fix this. 
 
 
 
