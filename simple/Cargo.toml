@@ -6,3 +6,76 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+# tank deps
+uuid = { version = "1.2.2", features = ["v4", "fast-rng"] }
+# TODO scuba-core
+# DUPLICATE serde = { version = "1.0.152", features = ["derive"] }
+# DUPLICATE serde_json = { version = "1.0.91", features = ["std"] }
+# DUPLICATE tokio = { version = "1.23.0", features = ["macros"] }
+thiserror = "1.0.38"
+# ERROR reqwest = "0.11.13"
+#openssl = { version = "0.10.64", features = ["vendored"] }
+futures = "0.3.25"
+async-trait = "0.1.66"
+parking_lot = { version = "0.12.1", features = ["send_guard"] }
+async-condvar-fair = { version = "1.0.0", features = ["parking_lot_0_12"] }
+# DUP itertools = "0.10.5"
+bincode = "1.3.3"
+async-recursion = "1.0.5"
+
+# core deps
+url = "2.3.1"
+eventsource-client = "0.11.0"
+# ERROR reqwest = { version = "0.11.13", features = ["json"] }
+urlencoding = "2.1.2"
+# DUPLICATE futures = "0.3.25"
+tokio = { version = "1.27.0", features = ["macros"] }
+serde = { version = "1.0.160", features = ["derive"] }
+serde_json = { version = "1.0.96", features = ["std"] }
+olm-rs = "2.2.0"
+log = "0.4.17"
+sha2 = "0.10.6"
+# DUPLICATE parking_lot = "0.12.1"
+# DUPLICATE async-condvar-fair = { version = "1.0.0", features = ["parking_lot_0_12"] }
+# DUPLICATE async-trait = "0.1.64"
+aes = "0.8.2"
+rand = "0.8.5"
+cbc = { version = "0.1.2", features = ["alloc"] }
+base64 = "0.21.0"
+ed25519-dalek = "1.0.1"
+# DUPLICATE bincode = "1.3.3"
+aes-gcm = "0.10.3"
+
+# server deps
+actix = "0.13.0"
+actix-web = "4.3.1"
+actix-web-lab = { version = "0.19.1", default-features = false }
+async-bincode = "0.7.2"
+# DUPLICATE base64 = "0.21.0"
+# DUPLICATE bincode = "1.3.3"
+blist = "0.0.4"
+clap = { version = "4.1.13", features = ["derive"] }
+# DUP ed25519-dalek = "1.0.1"
+futures-io = "0.3.29"
+futures-sink = "0.3.29"
+futures-util = { version = "0.3.29", features = ["sink"] }
+itertools = "0.12.0"
+# DUP rand = "0.7"
+# ERROR reqwest = { version = "0.11.15", features = ["json"] }
+rkyv = { version = "0.7.42", features = ["validation"] }
+# ERROR rkyv_codec = "0.3.1"
+# DUP serde = { version = "1.0.158", features = ["derive"] }
+# DUP serde_json = "1.0.95"
+# DUP sha2 = "0.10.6"
+# DUP tokio = "1.26.0"
+tokio-stream = "0.1.14"
+tokio-util = { version = "0.7.10", features = ["compat"] }
+
+# CRATE ERRORS TO RESOLVE:
+
+# reqwest
+openssl = { version = "0.10.64", features = ["vendored"] }
+reqwest = { version = "0.11.15", features = ["json"] }
+
+# rkyv_codec
+#rkyv_codec = "0.3.1"
