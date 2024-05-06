@@ -7,7 +7,8 @@ plugins {
 android {
     namespace 'com.example.minimalrustimport'
     compileSdk 33
-    ndkVersion "27.0.11718014"
+    ndkVersion "25.2.9519653"
+    //ndkVersion "27.0.11718014"
 
     defaultConfig {
         applicationId "com.example.minimalrustimport"

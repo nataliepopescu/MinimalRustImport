@@ -331,5 +331,65 @@ Actually, let's write two functions. One with arguments, and one without.
 Note [this](https://doc.rust-lang.org/nomicon/ffi.html#asynchronous-callbacks) (async callbacks through FFI)
 may be important in the future!
 
+Now we have a `hello()` function that always returns "Hello from Rust!", and an
+`add()` function that adds two integer arguments together and returns the result. 
+
+```rust
+use std::os::raw::{c_char};
+use std::ffi::CString;
+
+#[no_mangle]
+pub extern fn hello() -> *mut c_char {
+    CString::new("Hello from Rust!").unwrap().into_raw()
+}
+
+#[no_mangle]
+pub extern fn add(left: usize, right: usize) -> usize {
+    left + right
+}
+```
+
+
+
+**Note:** Back on Linux.
+
+The code compiles/launches, but run fails with `java.lang.UnsatisfiedLinkError: dlopen failed: library "libsimple.so" not found`. 
+`libsimple.so` exists for each architecture I'm compiling for in the `app/build/rustJniLibs` directory. 
+I tried to create `jniLibs` dir in `app/src/main` and put all the `.so`s in there,
+but that didn't resolve the error. 
+
+Hm, re-ran after deleting `jniLibs` and now it works.... Ok then!
+
+
+Let us try to set the TextView that originally said "Hello World!" to the result
+of our Rust `hello()` function. 
+
+In a companion object (effectively a static class in Kotlin) in `MainActivity.kt`,
+we have the following: 
+
+```sh
+init {
+  System.loadLibrary("simple")
+}
+```
+
+And our extern function declaration:
+
+```sh
+external fun hello(): String
+```
+
+
+**Note:** if get the following error, try to clean the app and re-build:
+
+```sh
+java.lang.UnsatisfiedLinkError: No implementation found for java.lang.String
+```
+
+
+
+
+
+
 
 

@@ -2,18 +2,21 @@ package com.example.minimalrustimport
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.widget.TextView
+import com.example.minimalrustimport.databinding.ActivityMainBinding
 
 class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
-        val hello_message: TextView = findViewById(R.id.hello_message)
-        hello_message.setText("Different Text!")
+        val binding = ActivityMainBinding.inflate(layoutInflater)
+        setContentView(binding.root)
+        binding.helloMessage.text = hello()
+        //binding.addResult.text = add(4, 6).toString()
     }
 
-    // still don't entirely understand why we are adding this here though
-    // furthermore, this is the first change I've made to the code and it still compiles
+    external fun hello(): String?
+
+    //external fun add(left: Int, right: Int): Int?
+
     companion object {
         init {
             System.loadLibrary("simple")
