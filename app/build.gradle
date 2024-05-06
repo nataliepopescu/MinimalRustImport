@@ -7,7 +7,7 @@ plugins {
 android {
     namespace 'com.example.minimalrustimport'
     compileSdk 33
-    ndkVersion "25.2.9519653"
+    ndkVersion "27.0.11718014"
 
     defaultConfig {
         applicationId "com.example.minimalrustimport"
@@ -52,8 +52,8 @@ dependencies {
 apply plugin: 'org.mozilla.rust-android-gradle.rust-android'
 
 cargo {
-    module = "../tank"
-    libname = "tank"
+    module = "../simple"
+    libname = "simple"
     targets = ["x86_64", "x86", "arm", "arm64"]
 }
 

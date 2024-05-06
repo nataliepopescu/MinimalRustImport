@@ -143,9 +143,6 @@ The app now *officially* builds _in_ Android Studio.
 
 ## Debugging emulator errors
 
-
-
-
 App compiles, but the emulator doesn't actually show the app. Launch apparently
 succeeds but logcat shows the following error: 
 
@@ -154,12 +151,185 @@ succeeds but logcat shows the following error:
 Looking this up I find [this](https://stackoverflow.com/questions/52076641/java-lang-unsatisfiedlinkerror-dlopen-failed-library-not-found)
 article. 
 
-TODO still need to fix this. 
+This is when I try to emulate the app remotely (X11 forwarding). To rule out
+issues in that, I'll try to get things working locally on my Mac.
+
+
+## Mac emulation
+
+I install Android Studio Jellyfish (2023.3.1.18) while that on my desktop is Electric Eel (2022).
+
+Configuring basic app to support minimum SDK API 24 ("Nougat"; Android 7.0). 
+
+```sh
+export ANDROID_HOME="~/Library/Android/sdk/"
+```
+
+(location found [here](https://stackoverflow.com/questions/19986214/setting-android-home-enviromental-variable-on-mac-os-x))
+
+`./gradlew cargoBuild` apparently didn't like this, so I set the same value
+in `local.properties` instead (key = sdk.dir).
+
+Then I get an error saying that the NDK is not installed. The NDK (native 
+development kit) apparently lets you use C/C++ with Android. I am not sure
+why I need it though. Is this related to Rust? I install it via the Android
+Studio SDK Manager. 
+
+I also install Cmake and Android Studio command-line tools, since there seems
+to be some dependency between NDK and Cmake, and Android Studio command-line tools
+could be useful. 
+
+Got the same error after trying to build again, but realized the `app/build.gradle` 
+was still pointing to an old ndkVersion value, so I updated that and it worked. 
+
+Don't forget to install all the necessary cross-comp toolchains: 
+
+```sh
+rustup target add armv7-linus-androideabi (Arm)
+rustup target add aarch64-linux-android (Arm64)
+rustup target add i686-linux-android (X86)
+rustup target add x86_64-linux-android (X86_64)
+```
+
+Crates seem to be compiling now. Build fails with the following error: 
+
+```sh
+error: failed to run custom build command for `olm-sys v1.3.2`
+...
+please set the ANDROID_NDK environment variable to your Android NDK instalation
+```
+
+I'll try:
+
+```sh
+export ANDROID_NDK="~/Library/Android/sdk/ndk"
+```
+
+Then I get what is seemingly a Cmake configuration error. 
+
+```sh
+error: failed to run custom build command for `olm-sys v1.3.2`
+...
+-- Configuring incomplete, errors occurred!
+...
+CMake Error at...
+  Could not find toolchain file:
+  /Users/np/Library/Android/sdk/ndk/build/cmake/android.toolchain.cmake
+Call Stack (most recent call first):
+  CMakeLists.txt:3 (project)
+
+CMake Error: CMake was unable to find a build program corresponding to "Unix Makefiles".  CMAKE_MAKE_PROGRAM is not set.  You probably need to select a different build tool.
+CMake Error: CMAKE_CXX_COMPILER not set, after EnableLanguage
+CMake Error: CMAKE_C_COMPILER not set, after EnableLanguage
+...
+/bin/sh: /home/np/Android/Sdk/ndk/25.2.9519653/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-ranlib: No such file or directory
+...
+Error installing OpenSSL:
+```
+
+This ranlib error looks familiar, which I fixed on Ubuntu using a `.cargo/config.toml` 
+file. Ah, turns out that file is, of course, using paths specific to my desktop machine. 
+So, I replace them with my Mac paths (to the SDK/NDK). TODO this file should
+really be using $ANDROID_NDK but when I last tried it the variable wasn't 
+properly resolved, which is why I'm using magic paths now. 
+
+The above cmake error still occurs without the following ranlib ones. So at
+least that was addressed. The cmake crate seems to be a dependency of olm-sys, which
+is a dependency of olm-rs. 
+
+From searching online, this error seems to mean that cmake is looking for make
+and cannot find it. I have make installed and accessible on my path (`/usr/bin/make`)
+so I'll try setting CMAKE_MAKE_PROGRAM to that path. 
+
+That didn't help. 
+
+I re-ran the build inside Android Studio (so far I've been doing both/just command-line)
+and it succeeded in Android Studio. During that build it looked like a bunch of thing
+were being installed as well. 
+
+Ah, but the command-line version still does not work. Well, that's ok, we
+were only using the command-line version to work without the Android Studio GUI,
+but now that we have that and all its bells and whistles, we can just move forward there. 
+
+Just kidding, Android Studio still fails to _run_ due to olm-sys:
+
+```sh
+please set the ANDROID_NDK environment variable to your Android NDK instalation
+```
+
+I try updating the `local.properties` file with the `ndk.dir` key. 
+Build still fails, and I get a message saying that this method of setting NDK home 
+is deprecated, so I set the ANDROID_NDK var in tank's `.cargo/config.toml`. 
+
+cargoBuildArm64 and cargoBuildX86_64 fail running the openssl custom build script. 
+Both outputs for these targets claim that openssl is successfully configured
+(for cross-compilation I assume). But the both fail with:
+
+```sh
+make: *** read jobs pipe: Resource temporarily unavailable.  Stop.
+```
+
+(cargoBuildX86_64 error message also has a bunch of other lines printed out
+unlike that for cargoBuildArm64). 
+
+I'm not sure what exactly I changed, but running it again cargoBuildArm64
+and cargoBuildX86_64 now both succeed. 
+
+Now let's see how the emulator works. The app isn't really launching. My mac
+only has 8GB RAM while 16 are recommended, which may explain this. I'll continue
+testing this out once I get a physical android device from Leon on Monday. 
 
 
 
 
+## Running Basic App (no Rust); Mac
 
+An app that uses the BasicView Activity runs, but had a couple pop-ups that
+claimed things were taking too long to load. Even after I clicked close app,
+the app then worked? Unclear what was going on. 
+
+
+
+## Running App with Simple (crate) Rust code
+
+We'll comment out all of the simple lib dependencies we added for testing
+SCUBA deps, so we can cut build time and increase iterations. 
+
+Goal is to try to import Rust code that runs and produces output in the app UI. 
+The default function implemented in a library created with `cargo new` is `add`
+(adds two usizes together). So, in the app, we need to figure out how to (1) actually
+import/call the add function (with arguments of course) _and_ (2) print out the
+result. Let's focus on the first part. 
+
+[Here](https://mozilla.github.io/firefox-browser-architecture/experiments/2017-09-21-rust-on-android.html)
+is an old post from Mozilla that I'm roughly following. It has some obsolete
+things (i.e. `make_standalone_toolchain.py`, which explicity says "The compiler installed to
+<NDK>/toolchains/llvm/prebuilt/<host>/bin can be used directly" which is what
+we do in TANK's .cargo/config.toml file---this probably also needs to be done for
+the `simple` library, but I'm not getting any build errors so maybe not). 
+
+The above link has a function that prints "Hello <name>", so we can either
+copy that or try to adapt it to `add`. Let's try to adapt it to `add` so 
+we're not just blindly copying and can may get a better understanding of what's
+going on. 
+
+The following will be a bit of paraphrasing for the above link for my own understanding. 
+Since our Rust will be called from non-Rust code, we'll need to use the foreign function
+interface (FFI). I'm not sure _why_ but apparently we'll be calling the Rust code
+specifically through a C bridge (I'm guessing the other option would be C++ or
+some other language that can run natively?). Thus our function signature also needs
+the `extern` keyword such that the function is compiled with respect to C
+calling conventions. `#[no_mangle]` also does not mangle the function name so
+we can easily call it from Android Studio code. 
+
+Ah, it seems that a C ABI is commonly exposed by foreign code (i.e. various 
+languages?), which is why we opt for a C bridge. Also, Rust apparently uses
+the C ABI by default (i.e. if nothing is specified). 
+
+Actually, let's write two functions. One with arguments, and one without. 
+
+Note [this](https://doc.rust-lang.org/nomicon/ffi.html#asynchronous-callbacks) (async callbacks through FFI)
+may be important in the future!
 
 
 
