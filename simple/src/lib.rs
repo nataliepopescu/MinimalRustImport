@@ -1,4 +1,4 @@
-use std::os::raw::{c_char};
+use std::os::raw::{c_char, c_int};
 use std::ffi::CString;
 
 #[no_mangle]
@@ -7,7 +7,7 @@ pub extern "C" fn hello() -> *mut c_char {
 }
 
 #[no_mangle]
-pub extern fn add(left: usize, right: usize) -> usize {
+pub extern "C" fn add(left: c_int, right: c_int) -> c_int {
     left + right
 }
 
@@ -20,7 +20,7 @@ pub mod android {
     use super::*;
     use self::jni::JNIEnv;
     use self::jni::objects::{JClass, JString};
-    use self::jni::sys::{jstring};
+    use self::jni::sys::{jstring, jint};
 
     #[no_mangle]
     pub unsafe extern "system" fn Java_com_example_minimalrustimport_MainActivity_hello(env: JNIEnv, _: JClass, _: JString) -> jstring {
@@ -31,8 +31,9 @@ pub mod android {
         output.into_raw()
     }
 
-    //#[no_mangle]
-    //pub unsafe extern "system" fn Java_com_example_minimalrustimport_MainActivity_add(env:JNIEnv, _: JClass, java_pattern: JString) -> c_uint {
-    //    let result = add(1, 3);
-    //}
+    #[no_mangle]
+    pub unsafe extern "system" fn Java_com_example_minimalrustimport_MainActivity_add(env: JNIEnv, _: JClass, java_left: jint, java_right: jint) -> jint {
+        let result = add(java_left, java_right);
+        result
+    }
 }

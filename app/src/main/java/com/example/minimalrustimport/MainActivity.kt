@@ -10,12 +10,12 @@ class MainActivity : AppCompatActivity() {
         val binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
         binding.helloMessage.text = hello()
-        //binding.addResult.text = add(4, 6).toString()
+        binding.addResult.text = add(4, 6).toString()
     }
 
     external fun hello(): String?
 
-    //external fun add(left: Int, right: Int): Int?
+    external fun add(left: Int, right: Int): Int?
 
     companion object {
         init {

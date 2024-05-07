@@ -386,10 +386,21 @@ external fun hello(): String
 java.lang.UnsatisfiedLinkError: No implementation found for java.lang.String
 ```
 
+We successfully run the app with the `hello()` function. Unfortunately, running
+it with `add()` is still not working; most of the examples online only work with
+strings while add works with integers, and it is not clear if this is the case
+because working with objects is more difficult and there's a trick that I'm just
+missing to be able to make things work with integers (and more than one parameter),
+or if even integers must be treated as strings when interacting between languages. TBD. 
 
 
 
 
+https://github.com/android/ndk-samples/blob/main/hello-jni/app/src/main/java/com/example/hellojni/HelloJni.kt
+
+https://blog.svgames.pl/article/running-rust-on-android
+
+https://github.com/suve/rust-on-android/blob/trunk/rust/src/android.rs
 
 
 
