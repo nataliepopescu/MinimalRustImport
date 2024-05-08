@@ -29,7 +29,9 @@ struct Store {
 
 impl Store {
     pub fn new() -> Self {
-        Store { map: HashMap::new() }
+        Store {
+            map: HashMap::new(),
+        }
     }
 
     pub fn get_data(&self, id: &String) -> Option<&Data> {
@@ -44,48 +46,58 @@ impl Store {
 // TODO Test asynchronous code
 
 // Expose JNI for android
-#[cfg(target_os="android")]
+#[cfg(target_os = "android")]
 #[allow(non_snake_case)]
 pub mod android {
     extern crate jni;
 
-    use super::*;
+    use self::jni::objects::JClass; //, JObject};
+    use self::jni::sys::{jint, jstring}; //, jobject};
     use self::jni::JNIEnv;
-    use self::jni::objects::{JClass}; //, JObject};
-    use self::jni::sys::{jstring, jint}; //, jobject};
+    use super::*;
 
     use std::ffi::CString;
 
     #[no_mangle]
-    pub unsafe extern "C" fn Java_com_example_minimalrustimport_MainActivity_hello(env: JNIEnv, _: JClass) -> jstring {
-        let c_string = CString::new(hello().as_str()).unwrap(); //.into_raw();
-        //let c_string_ptr = CString::from_raw(c_string);
-        let java_string = env.new_string(c_string.to_str().unwrap()).expect("couldn't create Java string"); 
+    pub unsafe extern "C" fn Java_com_example_minimalrustimport_MainActivity_hello(
+        env: JNIEnv,
+        _: JClass,
+    ) -> jstring {
+        let c_string = CString::new(hello().as_str()).unwrap();
+        let java_string = env
+            .new_string(c_string.to_str().unwrap())
+            .expect("couldn't create Java string");
 
         java_string.into_raw()
     }
 
     #[no_mangle]
-    pub unsafe extern "C" fn Java_com_example_minimalrustimport_MainActivity_add(_env: JNIEnv, _: JClass, java_left: jint, java_right: jint) -> jint {
+    pub unsafe extern "C" fn Java_com_example_minimalrustimport_MainActivity_add(
+        _env: JNIEnv,
+        _: JClass,
+        java_left: jint,
+        java_right: jint,
+    ) -> jint {
         add(java_left, java_right)
     }
 
-    //#[no_mangle]
-    //pub unsafe extern "system" fn Java_com_example_minimalrustimport_MainActivity_newStore(env: JNIEnv, _: JClass) -> jobject {
-    //    let rust_store = Store::new();
-    //    let class: jclass = env.find_class("Store");
-    //    let output = env.new_object(Store, 
+    #[no_mangle]
+    pub unsafe extern "C" fn Java_com_example_minimalrustimport_MainActivity_newStore(
+        env: JNIEnv,
+        _: JClass,
+    ) -> jobject {
+        let rust_store = Store::new();
+        let java_class: jclass = env.find_class("Store");
+        //let output = env.new_object(Store,
 
-    //    rust_store.into_raw()
-    //}
+        rust_store.into_raw()
+    }
 
     //#[no_mangle]
-    //pub unsafe extern "system" fn Java_com_example_minimalrustimport_MainActivity_getData(env: JNIEnv, _: JClass, java_id: JString) -> jobject {
-    //    let id = env.get_string(java_id).expect("invalid id string").as_ptr();
-    //    let id_ptr = CString::from_raw(id);
-    //    // TODO access Store
+    //pub unsafe extern "C" fn
+    // Java_com_example_minimalrustimport_MainActivity_getData(env: JNIEnv, _: JClass,
+    // java_id: JString) -> jobject {    let id =
+    // env.get_string(java_id).expect("invalid id string").as_ptr();    let id_ptr =
+    // CString::from_raw(id);    // TODO access Store
     //}
 }
-
-
-
