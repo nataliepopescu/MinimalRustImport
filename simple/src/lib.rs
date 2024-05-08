@@ -1,15 +1,45 @@
-use std::os::raw::{c_char, c_int};
-use std::ffi::CString;
+use std::collections::HashMap;
 
-#[no_mangle]
-pub extern "C" fn hello() -> *mut c_char {
-    CString::new("Hello from Rust!").unwrap().into_raw()
+pub fn hello() -> String {
+    String::from("Hello from Rust!")
 }
 
-#[no_mangle]
-pub extern "C" fn add(left: c_int, right: c_int) -> c_int {
+pub fn add(left: i32, right: i32) -> i32 {
     left + right
 }
+
+// Test with more complicated objects
+
+struct Data {
+    id: String,
+    val: String,
+}
+
+impl Data {
+    pub fn new(id: String, val: String) -> Self {
+        Data { id, val }
+    }
+}
+
+struct Store {
+    map: HashMap<String, Data>,
+}
+
+impl Store {
+    pub fn new() -> Self {
+        Store { map: HashMap::new() }
+    }
+
+    pub fn get_data(&self, id: &String) -> Option<&Data> {
+        self.map.get(id)
+    }
+
+    pub fn set_data(&mut self, id: String, val: Data) -> Option<Data> {
+        self.map.insert(id, val)
+    }
+}
+
+// TODO Test asynchronous code
 
 // Expose JNI for android
 #[cfg(target_os="android")]
@@ -19,21 +49,41 @@ pub mod android {
 
     use super::*;
     use self::jni::JNIEnv;
-    use self::jni::objects::{JClass, JString};
-    use self::jni::sys::{jstring, jint};
+    use self::jni::objects::{JClass}; //, JObject};
+    use self::jni::sys::{jstring, jint}; //, jobject};
+
+    use std::ffi::CString;
 
     #[no_mangle]
-    pub unsafe extern "system" fn Java_com_example_minimalrustimport_MainActivity_hello(env: JNIEnv, _: JClass, _: JString) -> jstring {
-        let greeting = hello();
-        let greeting_ptr = CString::from_raw(greeting);
-        let output = env.new_string(greeting_ptr.to_str().unwrap()).expect("Couldn't create Java string!");
+    pub unsafe extern "C" fn Java_com_example_minimalrustimport_MainActivity_hello(env: JNIEnv, _: JClass) -> jstring {
+        let c_string = CString::new(hello().as_str()).unwrap().into_raw();
+        let c_string_ptr = CString::from_raw(c_string);
+        let java_string = env.new_string(c_string_ptr.to_str().unwrap()).expect("couldn't create Java string"); 
 
-        output.into_raw()
+        java_string.into_raw()
     }
 
     #[no_mangle]
-    pub unsafe extern "system" fn Java_com_example_minimalrustimport_MainActivity_add(env: JNIEnv, _: JClass, java_left: jint, java_right: jint) -> jint {
-        let result = add(java_left, java_right);
-        result
+    pub unsafe extern "C" fn Java_com_example_minimalrustimport_MainActivity_add(_env: JNIEnv, _: JClass, java_left: jint, java_right: jint) -> jint {
+        add(java_left, java_right)
     }
+
+    //#[no_mangle]
+    //pub unsafe extern "system" fn Java_com_example_minimalrustimport_MainActivity_newStore(env: JNIEnv, _: JClass) -> jobject {
+    //    let rust_store = Store::new();
+    //    let class: jclass = env.find_class("Store");
+    //    let output = env.new_object(Store, 
+
+    //    rust_store.into_raw()
+    //}
+
+    //#[no_mangle]
+    //pub unsafe extern "system" fn Java_com_example_minimalrustimport_MainActivity_getData(env: JNIEnv, _: JClass, java_id: JString) -> jobject {
+    //    let id = env.get_string(java_id).expect("invalid id string").as_ptr();
+    //    let id_ptr = CString::from_raw(id);
+    //    // TODO access Store
+    //}
 }
+
+
+
