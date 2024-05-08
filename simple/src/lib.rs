@@ -1,5 +1,7 @@
 use std::collections::HashMap;
 
+// Test simple functions
+
 pub fn hello() -> String {
     String::from("Hello from Rust!")
 }
@@ -8,7 +10,7 @@ pub fn add(left: i32, right: i32) -> i32 {
     left + right
 }
 
-// Test with more complicated objects
+// Test more complicated objects
 
 struct Data {
     id: String,
@@ -56,9 +58,9 @@ pub mod android {
 
     #[no_mangle]
     pub unsafe extern "C" fn Java_com_example_minimalrustimport_MainActivity_hello(env: JNIEnv, _: JClass) -> jstring {
-        let c_string = CString::new(hello().as_str()).unwrap().into_raw();
-        let c_string_ptr = CString::from_raw(c_string);
-        let java_string = env.new_string(c_string_ptr.to_str().unwrap()).expect("couldn't create Java string"); 
+        let c_string = CString::new(hello().as_str()).unwrap(); //.into_raw();
+        //let c_string_ptr = CString::from_raw(c_string);
+        let java_string = env.new_string(c_string.to_str().unwrap()).expect("couldn't create Java string"); 
 
         java_string.into_raw()
     }
