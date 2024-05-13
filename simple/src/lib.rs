@@ -12,36 +12,36 @@ pub fn add(left: i32, right: i32) -> i32 {
 
 // Test more complicated objects
 
-struct Data {
-    id: String,
-    val: String,
-}
-
-impl Data {
-    pub fn new(id: String, val: String) -> Self {
-        Data { id, val }
-    }
-}
-
-struct Store {
-    map: HashMap<String, Data>,
-}
-
-impl Store {
-    pub fn new() -> Self {
-        Store {
-            map: HashMap::new(),
-        }
-    }
-
-    pub fn get_data(&self, id: &String) -> Option<&Data> {
-        self.map.get(id)
-    }
-
-    pub fn set_data(&mut self, id: String, val: Data) -> Option<Data> {
-        self.map.insert(id, val)
-    }
-}
+//struct Data {
+//    id: String,
+//    val: String,
+//}
+//
+//impl Data {
+//    pub fn new(id: String, val: String) -> Self {
+//        Data { id, val }
+//    }
+//}
+//
+//struct Store {
+//    map: HashMap<String, Data>,
+//}
+//
+//impl Store {
+//    pub fn new() -> Self {
+//        Store {
+//            map: HashMap::new(),
+//        }
+//    }
+//
+//    pub fn get_data(&self, id: &String) -> Option<&Data> {
+//        self.map.get(id)
+//    }
+//
+//    pub fn set_data(&mut self, id: String, val: Data) -> Option<Data> {
+//        self.map.insert(id, val)
+//    }
+//}
 
 // TODO Test asynchronous code
 
@@ -51,8 +51,8 @@ impl Store {
 pub mod android {
     extern crate jni;
 
-    use self::jni::objects::JClass; //, JObject};
-    use self::jni::sys::{jint, jstring}; //, jobject};
+    use self::jni::objects::{JString, JClass}; //, JObject};
+    use self::jni::sys::{jint, jstring, jobject};
     use self::jni::JNIEnv;
     use super::*;
 
@@ -81,17 +81,36 @@ pub mod android {
         add(java_left, java_right)
     }
 
-    #[no_mangle]
-    pub unsafe extern "C" fn Java_com_example_minimalrustimport_MainActivity_newStore(
-        env: JNIEnv,
-        _: JClass,
-    ) -> jobject {
-        let rust_store = Store::new();
-        let java_class: jclass = env.find_class("Store");
-        //let output = env.new_object(Store,
+    //#[no_mangle]
+    //pub unsafe extern "C" fn Java_com_example_minimalrustimport_MainActivity_newData(
+    //    env: JNIEnv,
+    //    _: JClass,
+    //    java_id: JString,
+    //    java_value: JString,
+    //) -> jobject {
+    //    // I don't think this is what we want to be doing; we're calling from
+    //    // Kotlin, into Rust, to call back out to a Kotlin constructor
+    //    let id = env.get_string(&java_id).expect("invalid id string").to_str().expect("could not create str slice for id");
+    //    let value = env.get_string(&java_value).expect("invalid value string").to_str().expect("could not create str slice for value");
+    //    let data = Data::new(id.to_string(), value.to_string());
 
-        rust_store.into_raw()
-    }
+    //    let java_class: jclass = env.find_class("com/example/minimalrustimport/SimpleData");
+    //    let simple_data = env.new_object(java_class, 
+
+    //    simple_data.into_raw()
+    //}
+
+    //#[no_mangle]
+    //pub unsafe extern "C" fn Java_com_example_minimalrustimport_MainActivity_newStore(
+    //    env: JNIEnv,
+    //    _: JClass,
+    //) -> jobject {
+    //    let rust_store = Store::new();
+    //    let java_class: jclass = env.find_class("Store");
+    //    //let output = env.new_object(Store,
+
+    //    rust_store.into_raw()
+    //}
 
     //#[no_mangle]
     //pub unsafe extern "C" fn

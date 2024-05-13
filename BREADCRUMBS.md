@@ -402,5 +402,7 @@ https://blog.svgames.pl/article/running-rust-on-android
 
 https://github.com/suve/rust-on-android/blob/trunk/rust/src/android.rs
 
+https://gendignoux.com/blog/2022/10/24/rust-library-android.html
 
+https://users.rust-lang.org/t/using-jni-to-call-a-rust-function-that-passes-and-returns-a-struct/67488
 
