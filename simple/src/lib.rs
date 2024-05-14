@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+//use std::collections::HashMap;
 
 // Test simple functions
 
@@ -11,6 +11,33 @@ pub fn add(left: i32, right: i32) -> i32 {
 }
 
 // Test more complicated objects
+
+// inspired by https://users.rust-lang.org/t/using-jni-to-call-a-rust-function-that-passes-and-returns-a-struct/67488
+
+struct Foo {
+    data1: i32,
+    data2: i32,
+}
+
+impl Foo {
+    pub fn new(data1: i32, data2: i32) -> Foo {
+      Self { data1, data2 }
+    }
+
+    pub fn get_sum(&self) -> i32 {
+      self.data1 + self.data2
+    }
+}
+
+// no idea how to import this/where it comes from, presumably it is defined
+// in flapigen(-rs) but I can't find the definition, and importing
+// flapigen::foreign_class does not work. 
+// see https://dushistov.github.io/flapigen-rs/foreign-class.html
+//foreign_class!(class Foo {
+//    self_type Foo;
+//    constructor Foo::new(data1: i32, data2: i32) -> Foo;
+//    fn Foo::get_sum(&self) -> i32;
+//});
 
 //struct Data {
 //    id: String,
@@ -51,12 +78,24 @@ pub fn add(left: i32, right: i32) -> i32 {
 pub mod android {
     extern crate jni;
 
-    use self::jni::objects::{JString, JClass}; //, JObject};
-    use self::jni::sys::{jint, jstring, jobject};
+    use self::jni::objects::{JClass}; //, JString, JObject};
+    use self::jni::sys::{jint, jlong, jstring}; //, jlong};
     use self::jni::JNIEnv;
     use super::*;
 
     use std::ffi::CString;
+
+    //use flapigen::foreign_class;
+
+    #[cfg(target_pointer_width = "64")]
+    unsafe fn jlong_to_pointer<T>(val: jlong) -> *mut T {
+        core::mem::transmute::<jlong, *mut T>(val) // as u64)
+    }
+
+    #[cfg(target_pointer_width = "32")]
+    unsafe fn jlong_to_pointer<T>(val: jlong) -> *mut T {
+        core::mem::transmute::<u32, *mut T>(val as u32)
+    }
 
     #[no_mangle]
     pub unsafe extern "C" fn Java_com_example_minimalrustimport_MainActivity_hello(
@@ -79,6 +118,41 @@ pub mod android {
         java_right: jint,
     ) -> jint {
         add(java_left, java_right)
+    }
+
+    #[no_mangle]
+    pub unsafe extern "C" fn Java_com_example_minimalrustimport_FooWrapper_newFoo(
+        _env: JNIEnv,
+        _: JClass,
+        java_data1: jint,
+        java_data2: jint,
+    ) -> jlong {
+        let foo = Foo::new(java_data1, java_data2);
+        let boxed_foo: Box<Foo> = Box::new(foo);
+        let foo_ptr: *mut Foo = Box::into_raw(boxed_foo);
+        foo_ptr as jlong
+    }
+
+    #[no_mangle]
+    pub unsafe extern "C" fn Java_com_example_minimalrustimport_FooWrapper_getSum(
+        _env: JNIEnv,
+        _: JClass,
+        java_foo: jlong,
+    ) -> jint {
+        let foo_obj: &Foo = unsafe { jlong_to_pointer::<Foo>(java_foo).as_mut().unwrap() };
+        let sum = foo_obj.get_sum();
+        sum
+    }
+
+    #[no_mangle]
+    pub unsafe extern "C" fn Java_com_example_minimalrustimport_MainActivity_getSum(
+        _env: JNIEnv,
+        _: JClass,
+        java_foo: jlong,
+    ) -> jint {
+        let foo_obj: &Foo = unsafe { jlong_to_pointer::<Foo>(java_foo).as_mut().unwrap() };
+        let sum = foo_obj.get_sum();
+        sum
     }
 
     //#[no_mangle]
