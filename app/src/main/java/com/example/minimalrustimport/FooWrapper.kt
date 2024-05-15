@@ -7,8 +7,14 @@ class FooWrapper {
 
     external fun getSum(nativePtr: Long): Int
 
+    external fun getProd(nativePtr: Long): Int
+
     fun getSumWrapper(): Int {
         return getSum(nativeFoo)
+    }
+
+    fun getProdWrapper(): Int {
+        return getProd(nativeFoo)
     }
 
     init {

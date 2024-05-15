@@ -20,6 +20,8 @@ class MainActivity : AppCompatActivity() {
         binding.fooSumMain.text = getSum(fooWrapper.nativeFoo).toString()
         binding.fooSumWrapperFromMain.text = fooWrapper.getSum(fooWrapper.nativeFoo).toString()
         binding.fooSumWrapper.text = fooWrapper.getSumWrapper().toString()
+
+        binding.fooProd.text = fooWrapper.getProdWrapper().toString()
     }
 
     external fun hello(): String?

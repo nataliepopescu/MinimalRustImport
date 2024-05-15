@@ -21,17 +21,21 @@ struct Foo {
 
 impl Foo {
     pub fn new(data1: i32, data2: i32) -> Foo {
-      Self { data1, data2 }
+        Self { data1, data2 }
     }
 
     pub fn get_sum(&self) -> i32 {
-      self.data1 + self.data2
+        self.data1 + self.data2
+    }
+
+    pub async fn get_product(&self) -> i32 {
+        self.data1 * self.data2
     }
 }
 
 // no idea how to import this/where it comes from, presumably it is defined
 // in flapigen(-rs) but I can't find the definition, and importing
-// flapigen::foreign_class does not work. 
+// flapigen::foreign_class does not work.
 // see https://dushistov.github.io/flapigen-rs/foreign-class.html
 //foreign_class!(class Foo {
 //    self_type Foo;
@@ -72,24 +76,27 @@ impl Foo {
 
 // TODO Test asynchronous code
 
+// TODO Test registering callbacks (invariant validation)
+
 // Expose JNI for android
 #[cfg(target_os = "android")]
 #[allow(non_snake_case)]
 pub mod android {
     extern crate jni;
 
-    use self::jni::objects::{JClass}; //, JString, JObject};
-    use self::jni::sys::{jint, jlong, jstring}; //, jlong};
+    use self::jni::objects::JClass; //, JString};
+    use self::jni::sys::{jint, jlong, jstring};
     use self::jni::JNIEnv;
     use super::*;
 
     use std::ffi::CString;
 
-    //use flapigen::foreign_class;
+    //use async_ffi::{FfiFuture, FutureExt};
+    use async_ffi::async_ffi;
 
     #[cfg(target_pointer_width = "64")]
     unsafe fn jlong_to_pointer<T>(val: jlong) -> *mut T {
-        core::mem::transmute::<jlong, *mut T>(val) // as u64)
+        core::mem::transmute::<jlong, *mut T>(val)
     }
 
     #[cfg(target_pointer_width = "32")]
@@ -112,7 +119,7 @@ pub mod android {
 
     #[no_mangle]
     pub unsafe extern "C" fn Java_com_example_minimalrustimport_MainActivity_add(
-        _env: JNIEnv,
+        _: JNIEnv,
         _: JClass,
         java_left: jint,
         java_right: jint,
@@ -122,7 +129,7 @@ pub mod android {
 
     #[no_mangle]
     pub unsafe extern "C" fn Java_com_example_minimalrustimport_FooWrapper_newFoo(
-        _env: JNIEnv,
+        _: JNIEnv,
         _: JClass,
         java_data1: jint,
         java_data2: jint,
@@ -135,24 +142,43 @@ pub mod android {
 
     #[no_mangle]
     pub unsafe extern "C" fn Java_com_example_minimalrustimport_FooWrapper_getSum(
-        _env: JNIEnv,
+        _: JNIEnv,
         _: JClass,
         java_foo: jlong,
     ) -> jint {
-        let foo_obj: &Foo = unsafe { jlong_to_pointer::<Foo>(java_foo).as_mut().unwrap() };
+        let foo_obj: &Foo =
+            unsafe { jlong_to_pointer::<Foo>(java_foo).as_mut().unwrap() };
         let sum = foo_obj.get_sum();
         sum
     }
 
     #[no_mangle]
     pub unsafe extern "C" fn Java_com_example_minimalrustimport_MainActivity_getSum(
-        _env: JNIEnv,
+        _: JNIEnv,
         _: JClass,
         java_foo: jlong,
     ) -> jint {
-        let foo_obj: &Foo = unsafe { jlong_to_pointer::<Foo>(java_foo).as_mut().unwrap() };
+        let foo_obj: &Foo =
+            unsafe { jlong_to_pointer::<Foo>(java_foo).as_mut().unwrap() };
         let sum = foo_obj.get_sum();
         sum
+    }
+
+    #[no_mangle]
+    #[async_ffi]
+    pub async unsafe extern "C" fn Java_com_example_minimalrustimport_FooWrapper_getProd(
+        _: JNIEnv<'_>,
+        _: JClass<'_>,
+        java_foo: jlong,
+    ) -> jint {
+        16
+        //async move {
+        //    //let foo_obj: &Foo = unsafe {
+        // jlong_to_pointer::<Foo>(java_foo).as_mut().unwrap() };    //let prod =
+        // foo_obj.get_product().await;    //prod
+        //    16
+        //}
+        //.into_ffi()
     }
 
     //#[no_mangle]
@@ -164,12 +190,15 @@ pub mod android {
     //) -> jobject {
     //    // I don't think this is what we want to be doing; we're calling from
     //    // Kotlin, into Rust, to call back out to a Kotlin constructor
-    //    let id = env.get_string(&java_id).expect("invalid id string").to_str().expect("could not create str slice for id");
-    //    let value = env.get_string(&java_value).expect("invalid value string").to_str().expect("could not create str slice for value");
-    //    let data = Data::new(id.to_string(), value.to_string());
+    //    let id = env.get_string(&java_id).expect("invalid id
+    // string").to_str().expect("could not create str slice for id");    let value =
+    // env.get_string(&java_value).expect("invalid value string").to_str().expect("could
+    // not create str slice for value");    let data = Data::new(id.to_string(),
+    // value.to_string());
 
-    //    let java_class: jclass = env.find_class("com/example/minimalrustimport/SimpleData");
-    //    let simple_data = env.new_object(java_class, 
+    //    let java_class: jclass =
+    // env.find_class("com/example/minimalrustimport/SimpleData");    let simple_data
+    // = env.new_object(java_class,
 
     //    simple_data.into_raw()
     //}

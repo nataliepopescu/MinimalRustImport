@@ -1,3 +1,10 @@
 <resources>
     <string name="app_name">MinimalRustImport</string>
+    <string name="hello_message">Hello message</string>
+    <string name="addition_result">Addition result</string>
+    <string name="foo_pointer">Foo pointer</string>
+    <string name="foo_sum_main">Foo sum (main)</string>
+    <string name="foo_sum_wrapper_from_main">Foo sum (wrapper from main)</string>
+    <string name="foo_sum_wrapper">Foo sum (wrapper)</string>
+    <string name="foo_product">Foo product</string>
 </resources>
