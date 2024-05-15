@@ -18,6 +18,6 @@ class FooWrapper {
     }
 
     init {
-        nativeFoo = newFoo(4, 4);
+        nativeFoo = newFoo(5, 4);
     }
 }

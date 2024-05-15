@@ -28,9 +28,12 @@ impl Foo {
         self.data1 + self.data2
     }
 
+    // Test asynchronous code
     pub async fn get_product(&self) -> i32 {
         self.data1 * self.data2
     }
+
+    // TODO Test registering callbacks (invariant validation)
 }
 
 // no idea how to import this/where it comes from, presumably it is defined
@@ -74,10 +77,6 @@ impl Foo {
 //    }
 //}
 
-// TODO Test asynchronous code
-
-// TODO Test registering callbacks (invariant validation)
-
 // Expose JNI for android
 #[cfg(target_os = "android")]
 #[allow(non_snake_case)]
@@ -91,8 +90,21 @@ pub mod android {
 
     use std::ffi::CString;
 
-    //use async_ffi::{FfiFuture, FutureExt};
-    use async_ffi::async_ffi;
+    use tokio::runtime::Runtime;
+
+    struct AsyncFoo {
+        foo: Foo,
+        runtime: Runtime,
+    }
+
+    impl AsyncFoo {
+        pub fn new(data1: i32, data2: i32) -> AsyncFoo {
+            Self {
+                foo: Foo::new(data1, data2),
+                runtime: Runtime::new().unwrap(),
+            }
+        }
+    }
 
     #[cfg(target_pointer_width = "64")]
     unsafe fn jlong_to_pointer<T>(val: jlong) -> *mut T {
@@ -134,9 +146,9 @@ pub mod android {
         java_data1: jint,
         java_data2: jint,
     ) -> jlong {
-        let foo = Foo::new(java_data1, java_data2);
-        let boxed_foo: Box<Foo> = Box::new(foo);
-        let foo_ptr: *mut Foo = Box::into_raw(boxed_foo);
+        let foo = AsyncFoo::new(java_data1, java_data2);
+        let boxed_foo: Box<AsyncFoo> = Box::new(foo);
+        let foo_ptr: *mut AsyncFoo = Box::into_raw(boxed_foo);
         foo_ptr as jlong
     }
 
@@ -146,9 +158,9 @@ pub mod android {
         _: JClass,
         java_foo: jlong,
     ) -> jint {
-        let foo_obj: &Foo =
-            unsafe { jlong_to_pointer::<Foo>(java_foo).as_mut().unwrap() };
-        let sum = foo_obj.get_sum();
+        let foo_obj: &AsyncFoo =
+            unsafe { jlong_to_pointer::<AsyncFoo>(java_foo).as_mut().unwrap() };
+        let sum = foo_obj.foo.get_sum();
         sum
     }
 
@@ -158,27 +170,24 @@ pub mod android {
         _: JClass,
         java_foo: jlong,
     ) -> jint {
-        let foo_obj: &Foo =
-            unsafe { jlong_to_pointer::<Foo>(java_foo).as_mut().unwrap() };
-        let sum = foo_obj.get_sum();
+        let foo_obj: &AsyncFoo =
+            unsafe { jlong_to_pointer::<AsyncFoo>(java_foo).as_mut().unwrap() };
+        let sum = foo_obj.foo.get_sum();
         sum
     }
 
     #[no_mangle]
-    #[async_ffi]
-    pub async unsafe extern "C" fn Java_com_example_minimalrustimport_FooWrapper_getProd(
+    pub unsafe extern "C" fn Java_com_example_minimalrustimport_FooWrapper_getProd(
         _: JNIEnv<'_>,
         _: JClass<'_>,
         java_foo: jlong,
     ) -> jint {
-        16
-        //async move {
-        //    //let foo_obj: &Foo = unsafe {
-        // jlong_to_pointer::<Foo>(java_foo).as_mut().unwrap() };    //let prod =
-        // foo_obj.get_product().await;    //prod
-        //    16
-        //}
-        //.into_ffi()
+        let foo_obj: &AsyncFoo =
+            unsafe { jlong_to_pointer::<AsyncFoo>(java_foo).as_mut().unwrap() };
+        let prod = foo_obj.runtime.block_on(async {
+            foo_obj.foo.get_product().await
+        });
+        prod
     }
 
     //#[no_mangle]
