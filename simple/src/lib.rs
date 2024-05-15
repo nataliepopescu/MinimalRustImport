@@ -178,8 +178,8 @@ pub mod android {
 
     #[no_mangle]
     pub unsafe extern "C" fn Java_com_example_minimalrustimport_FooWrapper_getProd(
-        _: JNIEnv<'_>,
-        _: JClass<'_>,
+        _: JNIEnv,
+        _: JClass,
         java_foo: jlong,
     ) -> jint {
         let foo_obj: &AsyncFoo =
