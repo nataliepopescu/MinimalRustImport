@@ -1,13 +1,13 @@
 package com.example.minimalrustimport
 
 class FooWrapper {
-    val nativeFoo: Long;
+    val nativeFoo: Long
 
-    external fun newFoo(data1: Int, data2: Int): Long
+    private external fun newFoo(data1: Int, data2: Int): Long
 
     external fun getSum(nativePtr: Long): Int
 
-    external fun getProd(nativePtr: Long): Int
+    private external fun getProd(nativePtr: Long): Int
 
     fun getSumWrapper(): Int {
         return getSum(nativeFoo)
@@ -18,6 +18,6 @@ class FooWrapper {
     }
 
     init {
-        nativeFoo = newFoo(5, 4);
+        nativeFoo = newFoo(5, 4)
     }
 }
